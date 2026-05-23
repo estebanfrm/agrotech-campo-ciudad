@@ -1,4 +1,9 @@
-export const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+function normalizeApiUrl(url) {
+  const cleanUrl = url.replace(/\/+$/, "");
+  return cleanUrl.endsWith("/api") ? cleanUrl : `${cleanUrl}/api`;
+}
+
+export const API_URL = normalizeApiUrl(import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api");
 
 export function getStoredSession() {
   const raw = localStorage.getItem("agrotech_session");

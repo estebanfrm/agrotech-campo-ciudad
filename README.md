@@ -140,13 +140,13 @@ La configuración incluida está preparada para:
 URL esperada del backend:
 
 ```text
-https://agrotech-backend.onrender.com
+https://agrotech-campo-ciudad.onrender.com
 ```
 
 API esperada:
 
 ```text
-https://agrotech-backend.onrender.com/api
+https://agrotech-campo-ciudad.onrender.com/api
 ```
 
 Si Render asigna otra URL, actualiza estas variables del servicio:
@@ -165,15 +165,16 @@ CSRF_TRUSTED_ORIGINS=https://<tu-backend>.onrender.com
 4. Configura esta variable de entorno en Vercel:
 
 ```text
-VITE_API_URL=https://agrotech-backend.onrender.com/api
+VITE_API_URL=https://agrotech-campo-ciudad.onrender.com/api
 ```
 
 5. Haz deploy.
 
-Si Vercel genera una URL distinta a `https://agrotech-campo-ciudad.vercel.app`, actualiza en Render:
+Si Vercel genera una URL distinta a `https://agrotech-campo-ciudad-qfzf-kq9jtt1qu-estebanfrms-projects.vercel.app`, actualiza en Render:
 
 ```text
 CORS_ALLOWED_ORIGINS=https://<tu-frontend>.vercel.app
+CSRF_TRUSTED_ORIGINS=https://agrotech-campo-ciudad.onrender.com,https://<tu-frontend>.vercel.app
 ```
 
 Después de actualizar CORS en Render, redeploya el backend.
