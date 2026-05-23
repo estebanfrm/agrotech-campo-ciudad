@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: agrotech-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    preDeployCommand: python manage.py migrate && python manage.py seed_data
+    startCommand: gunicorn agrotech.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: agrotech-backend.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://agrotech-campo-ciudad.vercel.app
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://agrotech-backend.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agrotech-db
+          property: connectionString
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+
+databases:
+  - name: agrotech-db
+    databaseName: agrotech
+    user: agrotech

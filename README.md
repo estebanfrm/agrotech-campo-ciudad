@@ -112,3 +112,72 @@ cd frontend
 npm install
 npm run build
 ```
+
+## Deploy
+
+La configuración incluida está preparada para:
+
+- Backend Django en Render.
+- Base de datos PostgreSQL administrada por Render.
+- Frontend React/Vite en Vercel.
+
+### Backend En Render
+
+1. En Render, crea un Blueprint desde este repositorio de GitHub:
+   `https://github.com/estebanfrm/agrotech-campo-ciudad`
+2. Render leerá `render.yaml` y creará:
+   - Servicio web `agrotech-backend`
+   - Base de datos `agrotech-db`
+3. El build ejecuta:
+   - `pip install -r requirements.txt`
+   - `python manage.py collectstatic --noinput`
+4. Antes de iniciar el servicio ejecuta:
+   - `python manage.py migrate`
+   - `python manage.py seed_data`
+5. El start command usa:
+   - `gunicorn agrotech.wsgi:application --bind 0.0.0.0:$PORT`
+
+URL esperada del backend:
+
+```text
+https://agrotech-backend.onrender.com
+```
+
+API esperada:
+
+```text
+https://agrotech-backend.onrender.com/api
+```
+
+Si Render asigna otra URL, actualiza estas variables del servicio:
+
+```text
+ALLOWED_HOSTS=<tu-backend>.onrender.com
+CSRF_TRUSTED_ORIGINS=https://<tu-backend>.onrender.com
+```
+
+### Frontend En Vercel
+
+1. En Vercel, importa el mismo repositorio de GitHub.
+2. Configura el proyecto con root directory:
+   `frontend`
+3. Vercel leerá `frontend/vercel.json`.
+4. Configura esta variable de entorno en Vercel:
+
+```text
+VITE_API_URL=https://agrotech-backend.onrender.com/api
+```
+
+5. Haz deploy.
+
+Si Vercel genera una URL distinta a `https://agrotech-campo-ciudad.vercel.app`, actualiza en Render:
+
+```text
+CORS_ALLOWED_ORIGINS=https://<tu-frontend>.vercel.app
+```
+
+Después de actualizar CORS en Render, redeploya el backend.
+
+### Nota Sobre Imágenes En Producción
+
+El MVP permite subir imágenes localmente. En deploy, Render no garantiza almacenamiento persistente para archivos subidos en disco. Para producción real conviene conectar un storage externo como S3, Cloudinary o similar. El flujo principal del MVP funciona sin imágenes porque son opcionales.
