@@ -13,7 +13,7 @@ MVP funcional de marketplace B2B para conectar productores rurales con comprador
 ## Requisitos Previos
 
 - Python 3.10+
-- Node.js 18+
+- Node.js 20+
 - npm
 
 ## Ejecutar Backend

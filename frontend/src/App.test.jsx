@@ -6,12 +6,11 @@ import { describe, expect, it } from "vitest";
 import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { SESSION_EXPIRED_EVENT } from "./lib/api.js";
-import { ROUTER_FUTURE_FLAGS } from "./lib/router.js";
 import { LocationDisplay, loginAs, mockApi } from "./test/utils.jsx";
 
 function renderApp(route) {
   return render(
-    <MemoryRouter future={ROUTER_FUTURE_FLAGS} initialEntries={[route]}>
+    <MemoryRouter initialEntries={[route]}>
       <AuthProvider>
         <App />
         <LocationDisplay />

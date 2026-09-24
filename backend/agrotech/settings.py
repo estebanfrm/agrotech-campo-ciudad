@@ -127,16 +127,20 @@ DEFAULT_CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://agrotech-campo-ciudad.vercel.app",
+    "https://agrotech-campo-ciudad-qfzf.vercel.app",
     "https://agrotech-campo-ciudad-qfzf-kq9jtt1qu-estebanfrms-projects.vercel.app",
 ]
 
 CORS_ALLOWED_ORIGINS = list(dict.fromkeys(DEFAULT_CORS_ALLOWED_ORIGINS + csv_env("CORS_ALLOWED_ORIGINS")))
 CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True").lower() == "true"
 
+# Vercel crea una URL nueva en cada deploy (<proyecto>-<hash>-<equipo>.vercel.app) y por rama
+# (<proyecto>-git-<rama>-<equipo>.vercel.app). Se aceptan solo las del equipo "estebanfrms-projects".
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://localhost:\d+$",
     r"^http://127\.0\.0\.1:\d+$",
-]
+    r"^https://agrotech-campo-ciudad[a-z0-9-]*-estebanfrms-projects\.vercel\.app$",
+] + csv_env("CORS_ALLOWED_ORIGIN_REGEXES")
 
 DEFAULT_CSRF_TRUSTED_ORIGINS = [
     "https://agrotech-campo-ciudad.onrender.com",

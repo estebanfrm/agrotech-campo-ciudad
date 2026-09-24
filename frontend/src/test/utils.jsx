@@ -4,7 +4,6 @@ import { vi } from "vitest";
 
 import { AuthProvider } from "../context/AuthContext.jsx";
 import { saveStoredSession } from "../lib/api.js";
-import { ROUTER_FUTURE_FLAGS } from "../lib/router.js";
 
 export const USERS = {
   comprador: { id: 4, username: "Restaurante Verde Mesa", email: "comprador1@agrotech.com", role: "comprador" },
@@ -48,7 +47,7 @@ export function LocationDisplay() {
 
 export function renderWithRouter(ui, { route = "/", path = "*" } = {}) {
   return render(
-    <MemoryRouter future={ROUTER_FUTURE_FLAGS} initialEntries={[route]}>
+    <MemoryRouter initialEntries={[route]}>
       <AuthProvider>
         <Routes>
           <Route path={path} element={ui} />
