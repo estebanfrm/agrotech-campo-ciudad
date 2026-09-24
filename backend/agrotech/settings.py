@@ -111,9 +111,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Sirve las imágenes subidas desde Django también en producción (sin storage externo).
 SERVE_MEDIA = os.getenv("SERVE_MEDIA", "True").lower() == "true"
 
+# Con CLOUDINARY_URL las imágenes van a Cloudinary (persisten); sin ella, al disco local.
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL", "").strip()
+
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "core.storage.CloudinaryMediaStorage" if CLOUDINARY_URL else "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
