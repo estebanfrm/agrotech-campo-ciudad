@@ -1,0 +1,14 @@
+{
+  "name": "Agrotech Campo-Ciudad",
+  "short_name": "Agrotech",
+  "description": "Marketplace B2B que conecta productores rurales con compradores urbanos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F6F3",
+  "theme_color": "#164A2F",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
