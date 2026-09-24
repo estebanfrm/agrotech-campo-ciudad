@@ -2,16 +2,11 @@ import { ArrowRight, Building2, Leaf, ShieldCheck, Store } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext.jsx";
-
-const roleTarget = {
-  productor: "/mis-productos",
-  comprador: "/catalogo",
-  administrador: "/admin",
-};
+import { homeForRole } from "../lib/roles.js";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
-  const target = isAuthenticated ? roleTarget[user.role] : "/registro";
+  const target = isAuthenticated ? homeForRole(user.role) : "/registro";
 
   return (
     <div className="grid gap-10">

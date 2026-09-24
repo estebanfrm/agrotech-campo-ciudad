@@ -1,34 +1,53 @@
 import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import ProductCard from "../components/ProductCard.jsx";
 import { apiRequest } from "../lib/api.js";
 
+const SEARCH_DELAY_MS = 300;
+
 export default function Catalog() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoria, setCategoria] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const categories = useMemo(() => [...new Set(products.map((product) => product.categoria))].sort(), [products]);
+  useEffect(() => {
+    apiRequest("/products/categories/")
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search.trim()), SEARCH_DELAY_MS);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
+    if (debouncedSearch) params.set("search", debouncedSearch);
     if (categoria) params.set("categoria", categoria);
+    const query = params.toString();
 
     setLoading(true);
-    apiRequest(`/products/${params.toString() ? `?${params.toString()}` : ""}`, { signal: controller.signal })
-      .then(setProducts)
-      .catch((err) => {
-        if (err.name !== "AbortError") setError(err.message);
+    apiRequest(`/products/${query ? `?${query}` : ""}`, { signal: controller.signal })
+      .then((data) => {
+        setProducts(data);
+        setError("");
+        setLoading(false);
       })
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        setError(err.message);
+        setLoading(false);
+      });
 
     return () => controller.abort();
-  }, [search, categoria]);
+  }, [debouncedSearch, categoria]);
 
   return (
     <section className="grid gap-6">
@@ -39,17 +58,21 @@ export default function Catalog() {
         </div>
         <div className="grid gap-3 sm:grid-cols-[1fr_220px] md:min-w-[560px]">
           <label className="relative">
+            <span className="sr-only">Buscar por nombre</span>
             <Search className="pointer-events-none absolute left-3 top-2.5 text-gray-400" size={18} />
             <input className="field pl-10" placeholder="Buscar por nombre" value={search} onChange={(e) => setSearch(e.target.value)} />
           </label>
-          <select className="field" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-            <option value="">Todas las categorías</option>
-            {categories.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
+          <label>
+            <span className="sr-only">Categoría</span>
+            <select className="field" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+              <option value="">Todas las categorías</option>
+              {categories.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
 
@@ -63,7 +86,7 @@ export default function Catalog() {
           ))}
         </div>
       ) : (
-        <div className="panel p-8 text-center font-semibold text-gray-600">No hay productos disponibles con esos filtros.</div>
+        !error && <div className="panel p-8 text-center font-semibold text-gray-600">No hay productos disponibles con esos filtros.</div>
       )}
     </section>
   );

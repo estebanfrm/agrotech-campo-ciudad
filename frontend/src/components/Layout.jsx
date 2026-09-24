@@ -3,12 +3,7 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext.jsx";
-
-const roleHome = {
-  productor: "/mis-productos",
-  comprador: "/catalogo",
-  administrador: "/admin",
-};
+import { homeForRole } from "../lib/roles.js";
 
 function navClass({ isActive }) {
   return `rounded-md px-3 py-2 text-sm font-semibold transition ${
@@ -25,6 +20,7 @@ export default function Layout({ children }) {
     { to: "/catalogo", label: "Catálogo", roles: ["comprador", "administrador", "productor"] },
     { to: "/mis-productos", label: "Mis productos", roles: ["productor"] },
     { to: "/productos/nuevo", label: "Crear producto", roles: ["productor"] },
+    { to: "/pedidos-recibidos", label: "Pedidos recibidos", roles: ["productor"] },
     { to: "/mis-pedidos", label: "Mis pedidos", roles: ["comprador"] },
     { to: "/admin", label: "Administrador", roles: ["administrador"] },
   ].filter((link) => !link.roles || link.roles.includes(user?.role));
@@ -38,7 +34,7 @@ export default function Layout({ children }) {
     <div className="min-h-screen bg-stoneSoft">
       <header className="sticky top-0 z-20 border-b border-forest/10 bg-wheat/95 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <Link to={isAuthenticated ? roleHome[user.role] : "/"} className="flex items-center gap-2 text-forest">
+          <Link to={isAuthenticated ? homeForRole(user.role) : "/"} className="flex items-center gap-2 text-forest">
             <span className="flex h-10 w-10 items-center justify-center rounded-md bg-forest text-white">
               <Sprout size={22} />
             </span>
@@ -48,7 +44,12 @@ export default function Layout({ children }) {
             </span>
           </Link>
 
-          <button className="btn-secondary px-3 md:hidden" onClick={() => setOpen((value) => !value)} type="button">
+          <button
+            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+            className="btn-secondary px-3 md:hidden"
+            onClick={() => setOpen((value) => !value)}
+            type="button"
+          >
             {open ? <X size={18} /> : <Menu size={18} />}
           </button>
 
@@ -89,7 +90,14 @@ export default function Layout({ children }) {
                 </NavLink>
               ))}
               {isAuthenticated ? (
-                <button className="btn-secondary" onClick={handleLogout} type="button">
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setOpen(false);
+                    handleLogout();
+                  }}
+                  type="button"
+                >
                   <LogOut size={16} /> Salir
                 </button>
               ) : (

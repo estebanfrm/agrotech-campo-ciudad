@@ -7,4 +7,12 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 5173,
   },
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.js",
+    css: false,
+    env: {
+      VITE_API_URL: "http://api.test/api",
+    },
+  },
 });

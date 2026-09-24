@@ -3,12 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext.jsx";
-
-const roleTarget = {
-  productor: "/mis-productos",
-  comprador: "/catalogo",
-  administrador: "/admin",
-};
+import { homeForRole } from "../lib/roles.js";
 
 export default function Register() {
   const { register } = useAuth();
@@ -28,7 +23,7 @@ export default function Register() {
     setLoading(true);
     try {
       const user = await register(form);
-      navigate(roleTarget[user.role] || "/", { replace: true });
+      navigate(homeForRole(user.role), { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -40,7 +35,7 @@ export default function Register() {
     <section className="mx-auto max-w-lg">
       <div className="panel p-6">
         <h1 className="text-2xl font-black text-forest">Registro</h1>
-        <p className="mt-2 text-sm text-gray-600">Crea una cuenta para publicar productos, comprar o administrar el marketplace.</p>
+        <p className="mt-2 text-sm text-gray-600">Crea una cuenta para publicar productos o comprar en el marketplace.</p>
         {error && <div className="mt-4 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</div>}
         <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
           <label className="grid gap-1 text-sm font-semibold">
@@ -60,8 +55,10 @@ export default function Register() {
             <select className="field" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
               <option value="comprador">Comprador</option>
               <option value="productor">Productor</option>
-              <option value="administrador">Administrador</option>
             </select>
+            <span className="text-xs font-normal text-gray-500">
+              Compradores hacen pedidos; productores publican sus cosechas.
+            </span>
           </label>
           <button className="btn-primary" disabled={loading} type="submit">
             <UserPlus size={16} /> {loading ? "Creando..." : "Crear cuenta"}

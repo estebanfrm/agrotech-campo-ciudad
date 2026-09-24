@@ -1,19 +1,14 @@
-import { Calendar, MapPin, Package, ShoppingCart } from "lucide-react";
+import { Calendar, MapPin, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { toCurrency } from "../lib/api.js";
+import ProductImage from "./ProductImage.jsx";
 
 export default function ProductCard({ product }) {
   return (
     <article className="panel overflow-hidden">
       <div className="aspect-[4/3] bg-mint">
-        {product.image_url ? (
-          <img className="h-full w-full object-cover" src={product.image_url} alt={product.nombre} />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-mint to-wheat text-forest">
-            <Package size={54} />
-          </div>
-        )}
+        <ProductImage product={product} />
       </div>
       <div className="space-y-4 p-5">
         <div>

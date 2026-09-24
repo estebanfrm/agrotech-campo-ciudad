@@ -15,11 +15,12 @@ export default function CreateOrder() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     apiRequest(`/products/${productId}/`)
       .then(setProduct)
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err.status === 404 ? "Producto no encontrado." : err.message))
       .finally(() => setLoading(false));
   }, [productId]);
 
@@ -27,7 +28,9 @@ export default function CreateOrder() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitting) return;
     setError("");
+    setSubmitting(true);
     try {
       await apiRequest("/orders/", {
         method: "POST",
@@ -40,11 +43,14 @@ export default function CreateOrder() {
       navigate("/mis-pedidos");
     } catch (err) {
       setError(err.message);
+      setSubmitting(false);
     }
   };
 
   if (loading) return <div className="panel p-8 text-center font-semibold text-gray-600">Cargando producto...</div>;
   if (!product) return <div className="rounded-md bg-red-50 p-4 font-semibold text-red-700">{error || "Producto no encontrado."}</div>;
+
+  const disponible = product.estado === "disponible" && Number(product.cantidad) > 0;
 
   return (
     <section className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-[0.9fr_1.1fr]">
@@ -71,37 +77,46 @@ export default function CreateOrder() {
       <div className="panel p-6">
         <h2 className="text-2xl font-black text-forest">Crear pedido</h2>
         {error && <div className="mt-4 rounded-md bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</div>}
-        <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
-          <label className="grid gap-1 text-sm font-semibold">
-            Cantidad solicitada
-            <input
-              className="field"
-              max={product.cantidad}
-              min="0.01"
-              step="0.01"
-              type="number"
-              value={form.cantidad}
-              onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
-              required
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Dirección de entrega
-            <input className="field" value={form.direccion_entrega} onChange={(e) => setForm({ ...form, direccion_entrega: e.target.value })} required />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold">
-            Observaciones
-            <textarea className="field min-h-28" value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} />
-          </label>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button className="btn-primary" type="submit">
-              <Send size={16} /> Enviar pedido
-            </button>
-            <Link className="btn-secondary" to={`/productos/${product.id}`}>
-              Volver al producto
+        {!disponible ? (
+          <div className="mt-6 grid gap-4">
+            <p className="rounded-md bg-wheat p-4 text-sm font-semibold text-forest">Este producto está agotado y no admite pedidos.</p>
+            <Link className="btn-secondary w-fit" to="/catalogo">
+              Volver al catálogo
             </Link>
           </div>
-        </form>
+        ) : (
+          <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+            <label className="grid gap-1 text-sm font-semibold">
+              Cantidad solicitada
+              <input
+                className="field"
+                max={product.cantidad}
+                min="0.01"
+                step="0.01"
+                type="number"
+                value={form.cantidad}
+                onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
+                required
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-semibold">
+              Dirección de entrega
+              <input className="field" value={form.direccion_entrega} onChange={(e) => setForm({ ...form, direccion_entrega: e.target.value })} required />
+            </label>
+            <label className="grid gap-1 text-sm font-semibold">
+              Observaciones
+              <textarea className="field min-h-28" value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} />
+            </label>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button className="btn-primary" disabled={submitting} type="submit">
+                <Send size={16} /> {submitting ? "Enviando..." : "Enviar pedido"}
+              </button>
+              <Link className="btn-secondary" to={`/productos/${product.id}`}>
+                Volver al producto
+              </Link>
+            </div>
+          </form>
+        )}
       </div>
     </section>
   );

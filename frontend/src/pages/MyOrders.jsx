@@ -3,7 +3,23 @@ import { useEffect, useState } from "react";
 
 import { apiRequest, statusLabel, toCurrency } from "../lib/api.js";
 
-export default function MyOrders() {
+const COPY = {
+  comprador: {
+    title: "Mis pedidos",
+    subtitle: "Historial y estado de tus compras agrícolas.",
+    empty: "Aún no tienes pedidos.",
+    totalLabel: "Total",
+  },
+  productor: {
+    title: "Pedidos recibidos",
+    subtitle: "Pedidos de compradores que incluyen tus productos.",
+    empty: "Aún no has recibido pedidos.",
+    totalLabel: "Total de tus productos",
+  },
+};
+
+export default function MyOrders({ variant = "comprador" }) {
+  const copy = COPY[variant];
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -18,8 +34,8 @@ export default function MyOrders() {
   return (
     <section className="grid gap-6">
       <div>
-        <h1 className="text-3xl font-black text-forest">Mis pedidos</h1>
-        <p className="mt-2 text-gray-600">Historial y estado de tus compras agrícolas.</p>
+        <h1 className="text-3xl font-black text-forest">{copy.title}</h1>
+        <p className="mt-2 text-gray-600">{copy.subtitle}</p>
       </div>
 
       {error && <div className="rounded-md bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</div>}
@@ -35,7 +51,11 @@ export default function MyOrders() {
                     <ClipboardList className="text-leaf" size={20} />
                     <h2 className="text-xl font-black text-ink">Pedido #{order.id}</h2>
                   </div>
-                  <p className="mt-1 text-sm text-gray-600">{order.direccion_entrega}</p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {variant === "productor" && `${order.buyer_name} · `}
+                    {order.direccion_entrega}
+                  </p>
+                  {order.observaciones && <p className="mt-1 text-sm text-gray-500">{order.observaciones}</p>}
                 </div>
                 <span className="badge bg-mint text-forest">{statusLabel(order.estado)}</span>
               </div>
@@ -49,12 +69,14 @@ export default function MyOrders() {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex justify-end text-lg font-black text-forest">Total: {toCurrency(order.total)}</div>
+              <div className="mt-4 flex justify-end text-lg font-black text-forest">
+                {copy.totalLabel}: {toCurrency(order.total)}
+              </div>
             </article>
           ))}
         </div>
       ) : (
-        <div className="panel p-8 text-center font-semibold text-gray-600">Aún no tienes pedidos.</div>
+        !error && <div className="panel p-8 text-center font-semibold text-gray-600">{copy.empty}</div>
       )}
     </section>
   );

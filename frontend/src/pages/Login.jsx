@@ -3,12 +3,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext.jsx";
-
-const roleTarget = {
-  productor: "/mis-productos",
-  comprador: "/catalogo",
-  administrador: "/admin",
-};
+import { homeForRole } from "../lib/roles.js";
 
 export default function Login() {
   const { login } = useAuth();
@@ -24,7 +19,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(form);
-      navigate(location.state?.from?.pathname || roleTarget[user.role] || "/", { replace: true });
+      navigate(location.state?.from?.pathname || homeForRole(user.role), { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
