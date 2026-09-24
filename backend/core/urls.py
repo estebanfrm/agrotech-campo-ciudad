@@ -6,6 +6,7 @@ from .views import (
     AdminOrdersView,
     AdminProductsView,
     AdminUsersView,
+    HealthView,
     LoginView,
     LogoutView,
     OrderViewSet,
@@ -18,6 +19,7 @@ router.register("products", ProductViewSet, basename="products")
 router.register("orders", OrderViewSet, basename="orders")
 
 urlpatterns = [
+    path("health/", HealthView.as_view(), name="health"),
     path("auth/register/", RegisterView.as_view(), name="register"),
     path("auth/login/", LoginView.as_view(), name="login"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
