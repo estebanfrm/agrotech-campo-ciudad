@@ -37,12 +37,20 @@ export default function AdminPanel() {
   }, []);
 
   const changeOrderStatus = async (orderId, estado) => {
+    if (estado === "cancelado") {
+      const confirmed = window.confirm("Cancelar el pedido devuelve el stock a los productores y no se puede deshacer. ¿Continuar?");
+      if (!confirmed) return;
+    }
+    setError("");
     try {
       const updated = await apiRequest(`/admin/orders/${orderId}/`, {
         method: "PATCH",
         body: JSON.stringify({ estado }),
       });
       setOrders((current) => current.map((order) => (order.id === updated.id ? updated : order)));
+      if (estado === "cancelado") {
+        setProducts(await apiRequest("/admin/products/"));
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -52,6 +60,7 @@ export default function AdminPanel() {
     const confirmed = window.confirm("¿Eliminar este producto del marketplace?");
     if (!confirmed) return;
     try {
+      setError("");
       await apiRequest(`/products/${productId}/`, { method: "DELETE" });
       setProducts((current) => current.filter((product) => product.id !== productId));
     } catch (err) {
@@ -98,6 +107,7 @@ export default function AdminPanel() {
         <>
           {tab === "pedidos" && (
             <div className="grid gap-4">
+              {!orders.length && <div className="panel p-8 text-center font-semibold text-gray-600">No hay pedidos todavía.</div>}
               {orders.map((order) => (
                 <article className="panel p-5" key={order.id}>
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -107,7 +117,13 @@ export default function AdminPanel() {
                         {order.buyer_name} · {order.direccion_entrega}
                       </p>
                     </div>
-                    <select className="field md:w-56" value={order.estado} onChange={(e) => changeOrderStatus(order.id, e.target.value)}>
+                    <select
+                      aria-label={`Estado del pedido ${order.id}`}
+                      className="field md:w-56"
+                      disabled={order.estado === "cancelado"}
+                      value={order.estado}
+                      onChange={(e) => changeOrderStatus(order.id, e.target.value)}
+                    >
                       {orderStatuses.map((status) => (
                         <option key={status} value={status}>
                           {statusLabel(status)}

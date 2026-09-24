@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, "claude/**"]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (Django)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: agrotech
+          POSTGRES_PASSWORD: agrotech
+          POSTGRES_DB: agrotech
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agrotech"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://agrotech:agrotech@localhost:5432/agrotech
+      DATABASE_SSL_REQUIRE: "False"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Verificar migraciones pendientes
+        run: python manage.py makemigrations --check --dry-run
+      - name: Pruebas (PostgreSQL)
+        run: python manage.py test
+      - name: Checks de producción
+        env:
+          DEBUG: "False"
+          SECRET_KEY: ci-only-secret-key-not-used-in-production-0123456789
+        run: |
+          python manage.py check --deploy --fail-level WARNING
+          python manage.py collectstatic --noinput
+
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Pruebas
+        run: npm test
+      - name: Build de producción
+        env:
+          VITE_API_URL: https://agrotech-campo-ciudad.onrender.com/api
+        run: npm run build

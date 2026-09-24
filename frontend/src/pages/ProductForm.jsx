@@ -22,6 +22,7 @@ export default function ProductForm() {
   const [imagen, setImagen] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(Boolean(id));
+  const [submitting, setSubmitting] = useState(false);
   const isEditing = Boolean(id);
 
   useEffect(() => {
@@ -45,7 +46,9 @@ export default function ProductForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitting) return;
     setError("");
+    setSubmitting(true);
     const payload = new FormData();
     Object.entries(form).forEach(([key, value]) => payload.append(key, value));
     if (imagen) payload.append("imagen", imagen);
@@ -58,6 +61,7 @@ export default function ProductForm() {
       navigate("/mis-productos");
     } catch (err) {
       setError(err.message);
+      setSubmitting(false);
     }
   };
 
@@ -80,7 +84,7 @@ export default function ProductForm() {
             </label>
             <label className="grid gap-1 text-sm font-semibold">
               Precio por kilo o unidad
-              <input className="field" min="0" step="0.01" type="number" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} required />
+              <input className="field" min="0.01" step="0.01" type="number" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} required />
             </label>
             <label className="grid gap-1 text-sm font-semibold">
               Cantidad disponible
@@ -110,8 +114,8 @@ export default function ProductForm() {
             Descripción
             <textarea className="field min-h-28" value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
           </label>
-          <button className="btn-primary" type="submit">
-            <Save size={16} /> Guardar producto
+          <button className="btn-primary" disabled={submitting} type="submit">
+            <Save size={16} /> {submitting ? "Guardando..." : "Guardar producto"}
           </button>
         </form>
       </div>

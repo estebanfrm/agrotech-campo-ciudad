@@ -2,6 +2,7 @@ import { ArrowLeft, Calendar, MapPin, Package, ShoppingCart, User } from "lucide
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import ProductImage from "../components/ProductImage.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { apiRequest, statusLabel, toCurrency } from "../lib/api.js";
 
@@ -12,13 +13,27 @@ export default function ProductDetail() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    setError("");
+    setProduct(null);
     apiRequest(`/products/${id}/`)
       .then(setProduct)
-      .catch((err) => setError(err.message));
+      .catch((err) => setError(err.status === 404 ? "Producto no encontrado." : err.message));
   }, [id]);
 
-  if (error) return <div className="rounded-md bg-red-50 p-4 font-semibold text-red-700">{error}</div>;
+  if (error) {
+    return (
+      <section className="grid gap-4">
+        <div className="rounded-md bg-red-50 p-4 font-semibold text-red-700">{error}</div>
+        <Link className="btn-secondary w-fit" to="/catalogo">
+          <ArrowLeft size={16} /> Volver al catálogo
+        </Link>
+      </section>
+    );
+  }
   if (!product) return <div className="panel p-8 text-center font-semibold text-gray-600">Cargando producto...</div>;
+
+  const disponible = product.estado === "disponible" && Number(product.cantidad) > 0;
+  const isBuyer = isAuthenticated && user.role === "comprador";
 
   return (
     <section className="grid gap-6">
@@ -28,13 +43,7 @@ export default function ProductDetail() {
 
       <div className="grid overflow-hidden rounded-lg border border-gray-200 bg-white shadow-soft lg:grid-cols-[0.95fr_1.05fr]">
         <div className="min-h-[340px] bg-mint">
-          {product.image_url ? (
-            <img className="h-full w-full object-cover" src={product.image_url} alt={product.nombre} />
-          ) : (
-            <div className="flex h-full min-h-[340px] items-center justify-center bg-gradient-to-br from-mint to-wheat text-forest">
-              <Package size={84} />
-            </div>
-          )}
+          <ProductImage product={product} iconSize={84} className="min-h-[340px]" />
         </div>
         <div className="p-6 md:p-8">
           <div className="flex flex-wrap gap-2">
@@ -65,13 +74,19 @@ export default function ProductDetail() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            {isAuthenticated && user.role === "comprador" ? (
+            {!disponible ? (
+              <p className="rounded-md bg-wheat px-4 py-2 text-sm font-semibold text-forest">
+                Este producto está agotado por ahora.
+              </p>
+            ) : isBuyer ? (
               <Link className="btn-primary" to={`/pedidos/nuevo/${product.id}`}>
                 <ShoppingCart size={16} /> Crear pedido
               </Link>
+            ) : isAuthenticated ? (
+              <p className="text-sm text-gray-600">Solo las cuentas de comprador pueden hacer pedidos.</p>
             ) : (
-              <Link className="btn-secondary" to={isAuthenticated ? "/catalogo" : "/login"}>
-                {isAuthenticated ? "Volver al catálogo" : "Iniciar sesión para comprar"}
+              <Link className="btn-secondary" state={{ from: { pathname: `/productos/${product.id}` } }} to="/login">
+                Iniciar sesión para comprar
               </Link>
             )}
           </div>

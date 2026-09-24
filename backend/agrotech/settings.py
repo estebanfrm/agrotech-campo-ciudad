@@ -1,5 +1,8 @@
 import os
+import sys
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,8 +11,12 @@ def csv_env(name, default=""):
     return [value.strip() for value in os.getenv(name, default).split(",") if value.strip()]
 
 
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-agrotech-campo-ciudad-dev-key")
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+SECRET_KEY = os.getenv("SECRET_KEY") or ""
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("SECRET_KEY es obligatoria cuando DEBUG=False.")
+    SECRET_KEY = "django-insecure-agrotech-campo-ciudad-dev-key"
 
 DEFAULT_ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -75,7 +82,7 @@ if DATABASE_URL:
         "default": dj_database_url.config(
             conn_max_age=600,
             conn_health_checks=True,
-            ssl_require=not DEBUG,
+            ssl_require=os.getenv("DATABASE_SSL_REQUIRE", str(not DEBUG)).lower() == "true",
         )
     }
 else:
@@ -88,6 +95,10 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = []
 
+if "test" in sys.argv:
+    # Hash rápido solo para acelerar la suite de pruebas.
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
 LANGUAGE_CODE = "es-co"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
@@ -97,6 +108,8 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# Sirve las imágenes subidas desde Django también en producción (sin storage externo).
+SERVE_MEDIA = os.getenv("SERVE_MEDIA", "True").lower() == "true"
 
 STORAGES = {
     "default": {
@@ -114,16 +127,20 @@ DEFAULT_CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://agrotech-campo-ciudad.vercel.app",
+    "https://agrotech-campo-ciudad-qfzf.vercel.app",
     "https://agrotech-campo-ciudad-qfzf-kq9jtt1qu-estebanfrms-projects.vercel.app",
 ]
 
 CORS_ALLOWED_ORIGINS = list(dict.fromkeys(DEFAULT_CORS_ALLOWED_ORIGINS + csv_env("CORS_ALLOWED_ORIGINS")))
 CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True").lower() == "true"
 
+# Vercel crea una URL nueva en cada deploy (<proyecto>-<hash>-<equipo>.vercel.app) y por rama
+# (<proyecto>-git-<rama>-<equipo>.vercel.app). Se aceptan solo las del equipo "estebanfrms-projects".
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://localhost:\d+$",
     r"^http://127\.0\.0\.1:\d+$",
-]
+    r"^https://agrotech-campo-ciudad[a-z0-9-]*-estebanfrms-projects\.vercel\.app$",
+] + csv_env("CORS_ALLOWED_ORIGIN_REGEXES")
 
 DEFAULT_CSRF_TRUSTED_ORIGINS = [
     "https://agrotech-campo-ciudad.onrender.com",
@@ -132,16 +149,19 @@ DEFAULT_CSRF_TRUSTED_ORIGINS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(DEFAULT_CSRF_TRUSTED_ORIGINS + csv_env("CSRF_TRUSTED_ORIGINS")))
-if RENDER_EXTERNAL_HOSTNAME:
+if RENDER_EXTERNAL_HOSTNAME and f"https://{RENDER_EXTERNAL_HOSTNAME}" not in CSRF_TRUSTED_ORIGINS:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", str(not DEBUG)).lower() == "true"
+SECURE_REDIRECT_EXEMPT = [r"^api/health/$"]
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", str(not DEBUG)).lower() == "true"
 CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", str(not DEBUG)).lower() == "true"
 SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000" if not DEBUG else "0"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "False").lower() == "true"
 SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False").lower() == "true"
+# onrender.com/vercel.app son dominios compartidos: no aplica HSTS preload ni subdominios.
+SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W021"]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -150,4 +170,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
+    "DEFAULT_THROTTLE_RATES": {
+        "auth": os.getenv("AUTH_THROTTLE_RATE", "20/min"),
+    },
 }

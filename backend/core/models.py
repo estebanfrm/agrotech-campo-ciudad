@@ -5,6 +5,13 @@ from django.db import models
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    def get_by_natural_key(self, username):
+        # El login por email no distingue mayúsculas de minúsculas.
+        user = self.filter(**{f"{self.model.USERNAME_FIELD}__iexact": username}).order_by("id").first()
+        if user is None:
+            raise self.model.DoesNotExist
+        return user
+
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError("El email es obligatorio.")
@@ -36,6 +43,13 @@ class User(AbstractUser):
         COMPRADOR = "comprador", "Comprador"
         ADMINISTRADOR = "administrador", "Administrador"
 
+    # Nombre de la persona o empresa: admite espacios y tildes (ej. "Restaurante Verde Mesa").
+    username = models.CharField(
+        "nombre o empresa",
+        max_length=150,
+        unique=True,
+        error_messages={"unique": "Ya existe una cuenta con este nombre."},
+    )
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.COMPRADOR)
 

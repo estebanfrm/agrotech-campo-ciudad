@@ -1,11 +1,17 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { apiRequest, clearStoredSession, getStoredSession, saveStoredSession } from "../lib/api.js";
+import { apiRequest, clearStoredSession, getStoredSession, saveStoredSession, SESSION_EXPIRED_EVENT } from "../lib/api.js";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => getStoredSession());
+
+  useEffect(() => {
+    const handleExpired = () => setSession(null);
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleExpired);
+  }, []);
 
   const login = async (credentials) => {
     const data = await apiRequest("/auth/login/", {

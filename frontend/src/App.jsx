@@ -9,6 +9,7 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import MyOrders from "./pages/MyOrders.jsx";
 import MyProducts from "./pages/MyProducts.jsx";
+import NotFound from "./pages/NotFound.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
 import ProductForm from "./pages/ProductForm.jsx";
 import Register from "./pages/Register.jsx";
@@ -63,6 +64,14 @@ export default function App() {
           }
         />
         <Route
+          path="/pedidos-recibidos"
+          element={
+            <ProtectedRoute roles={["productor"]}>
+              <MyOrders variant="productor" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <ProtectedRoute roles={["administrador"]}>
@@ -70,6 +79,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
   );

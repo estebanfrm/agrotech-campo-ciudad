@@ -12,7 +12,10 @@ export default function MyProducts() {
   const loadProducts = () => {
     setLoading(true);
     apiRequest("/products/?mine=true")
-      .then(setProducts)
+      .then((data) => {
+        setProducts(data);
+        setError("");
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   };
