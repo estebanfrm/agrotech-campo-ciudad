@@ -225,6 +225,21 @@ CSRF_TRUSTED_ORIGINS=https://agrotech-campo-ciudad.onrender.com,https://<tu-fron
 
 Después de actualizar CORS en Render, redeploya el backend.
 
-### Nota Sobre Imágenes En Producción
+### Imágenes Persistentes (Cloudinary, Gratis)
 
-Las imágenes (máximo 5 MB) se guardan en disco y Django las sirve en `/media/` también en producción (`SERVE_MEDIA=True`). Render no garantiza almacenamiento persistente: los archivos subidos se pierden en cada deploy o reinicio. Si una imagen desaparece, el frontend muestra el ícono de producto en su lugar. Para producción real conviene conectar un storage externo como S3, Cloudinary o un Render Disk. El flujo principal del MVP funciona sin imágenes porque son opcionales.
+El disco de Render no es persistente: sin configuración extra, las imágenes subidas se pierden en cada deploy o reinicio (el frontend muestra el ícono de producto en su lugar). Para que duren, usa Cloudinary (plan gratuito, sin tarjeta):
+
+1. Crea una cuenta en https://cloudinary.com.
+2. En el Dashboard, copia la **API environment variable**: `cloudinary://<api_key>:<api_secret>@<cloud_name>`.
+3. En Render → Environment, agrega `CLOUDINARY_URL` con ese valor y despliega.
+
+Con `CLOUDINARY_URL` definida, las imágenes nuevas se suben a la carpeta `agrotech/` de tu cuenta y la API devuelve su URL pública (`https://res.cloudinary.com/...`). Sin ella, se guardan en disco local como antes. Límite: 5 MB por imagen.
+
+### Base De Datos Persistente
+
+Sin `DATABASE_URL`, el backend usa SQLite dentro del servidor y en Render se borra en cada reinicio. Para conservar usuarios, productos y pedidos, define `DATABASE_URL` con una base PostgreSQL:
+
+- **Neon** (https://neon.tech, gratis y no vence): crea un proyecto y copia la connection string (`postgresql://...?sslmode=require`).
+- **Render PostgreSQL** (gratis, pero la base gratuita vence a los 30 días).
+
+Las migraciones se aplican solas en el siguiente arranque. Si la conexión falla por SSL, agrega `DATABASE_SSL_REQUIRE=False`.
