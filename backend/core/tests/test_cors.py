@@ -1,7 +1,7 @@
-from django.test import SimpleTestCase
+from django.test import TestCase
 
 
-class CorsTests(SimpleTestCase):
+class CorsTests(TestCase):
     def allowed_origin(self, origin):
         response = self.client.get("/api/health/", headers={"origin": origin})
         return response.headers.get("access-control-allow-origin")
